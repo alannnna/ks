@@ -8,13 +8,8 @@ Demo here: https://www.youtube.com/watch?v=OoPmEQdDsrs
 
 import RPi.GPIO as GPIO, time
 
-timeout = 10000
-total = 0
-DEBUG = 1
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
 
-def CapRead(inPin,outPin):
+def CapRead(inPin, outPin, timeout=10000):
     total = 0
     
     # set Send Pin Register low
@@ -54,31 +49,36 @@ def CapRead(inPin,outPin):
         return total
 
 
-# init LEDs sequence
-leds = [27,22,23,24,25,10,8,7]
+if __name__ == "__main__":
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
 
-for i in leds:
-    GPIO.setup( i,GPIO.OUT )
+    # init LEDs sequence
+    leds = [27,22,23,24,25,10,8,7]
 
-for l in range(0,10):
     for i in leds:
-        GPIO.output( i,GPIO.HIGH )
-    time.sleep(0.1)
-    for i in leds:
-        GPIO.output( i,GPIO.LOW )
-    time.sleep(0.1)
+        GPIO.setup( i,GPIO.OUT )
 
-# loop
-while True:
-    total = 0
-    for j in range(0,10):
-        total += CapRead(18,17);
-    for j in range(len(leds)):
-        if ( (total-40) / 16 > j ):
-            GPIO.output( leds[j],GPIO.HIGH )
-        else:
-            GPIO.output( leds[j],GPIO.LOW )
+    for l in range(0,10):
+        for i in leds:
+            GPIO.output( i,GPIO.HIGH )
+        time.sleep(0.1)
+        for i in leds:
+            GPIO.output( i,GPIO.LOW )
+        time.sleep(0.1)
+
+    # loop
+    while True:
+        total = 0
+        for j in range(0,10):
+            total += CapRead(18,17);
+        for j in range(len(leds)):
+            if ( (total-40) / 16 > j ):
+                GPIO.output( leds[j],GPIO.HIGH )
+            else:
+                GPIO.output( leds[j],GPIO.LOW )
 
     
-# clean before you leave
-GPIO.cleanup()
+    # clean before you leave
+    GPIO.cleanup()
+
