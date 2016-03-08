@@ -5,18 +5,30 @@ import RPi.GPIO as gpio
 from capsense import CapRead as cap_read
 
 
-if __name__ == "__main__":
-    gpio.setmode(gpio.BCM)
-    gpio.setwarnings(False)
+SENSOR_PIN = 17
+OUT_PIN = 18
 
-    SMOOTH_FACTOR = 500
 
-    while True:
+class TouchInstrument(object):
+    def __init__(self):
+        self.smooth_factor = 500
+
+        gpio.setmode(gpio.BCM)
+        gpio.setwarnings(False)
+
+    def get_sound_level(self):
+        ''' Returns an integer value for sound level '''
         total = 0
-        for j in range(0,SMOOTH_FACTOR):
-            val = cap_read(17, 18)
-            total += val
-        print "."*(max(total-4*SMOOTH_FACTOR, 0)//SMOOTH_FACTOR)
+        for i in range(0, self.smooth_factor):
+            total += cap_read(sensor_pin=SENSOR_PIN, out_pin=OUT_PIN)
+        return max(total-4*self.smooth_factor, 0) // self.smooth_factor
 
-    # clean before you leave
-    gpio.cleanup()
+    def run(self):
+        while True:
+            print "."*self.get_sound_level()
+
+
+if __name__ == "__main__":
+    ti = TouchInstrument()
+    ti.run()
+

@@ -9,10 +9,12 @@ Demo here: https://www.youtube.com/watch?v=OoPmEQdDsrs
 import RPi.GPIO as GPIO
 
 
-def CapRead(inPin, outPin, timeout=10000):
+def CapRead(sensor_pin, out_pin, timeout=10000):
     '''
     outPin = send pin; inPin = receive pin = sensor pin
     '''
+    inPin = sensor_pin
+    outPin = out_pin
     total = 0
 
     # set Send Pin Register low
