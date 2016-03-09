@@ -3,11 +3,11 @@
 from __future__ import division
 from time import sleep
 import atexit
-# import RPi.GPIO as gpio
+import RPi.GPIO as gpio
 import pygame
 from pygame.mixer import pre_init
 
-# from capsense import CapRead as cap_read
+from capsense import CapRead as cap_read
 from note import Note
 from chord_progression import get_next_chord, get_next_note
 
@@ -33,7 +33,7 @@ class TouchInstrument(object):
         total = 0
         for i in range(0, self.smooth_factor):
             total += cap_read(sensor_pin=SENSOR_PIN, out_pin=OUT_PIN)
-        return max(total-4*self.smooth_factor, 0) // self.smooth_factor
+        return max(total-5*self.smooth_factor, 0) // self.smooth_factor
 
     def add_note(self):
         print "adding note"
@@ -84,6 +84,8 @@ class TouchInstrument(object):
         try:
             while True:
                 level = self.get_sound_level()
+                sleep(0.05)
+                print "." * level
                 self.set_sound(level)
         except KeyboardInterrupt:
             print "Cleaning up."
@@ -117,5 +119,5 @@ class TouchInstrument(object):
 
 if __name__ == "__main__":
     ti = TouchInstrument()
-    # ti.run()
-    ti.test_run()
+    ti.run()
+    # ti.test_run()
