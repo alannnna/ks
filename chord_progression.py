@@ -49,12 +49,20 @@ def get_next_note(notes, chord, key=69):
 
 	# Add the next chord value in the sequence
 	offset = CHORDS[chord_qual][len(notes)%len(CHORDS[chord_qual])]
+
 	# Set an octave offset
-	if len(notes) > len(CHORDS[chord_qual]):
-		if len(notes)%len(CHORDS[chord_qual]) == 1:
-			octave_offset = -1 * (len(notes) // len(CHORDS[chord_qual]))
-		else:
-			octave_offset = len(notes) // len(CHORDS[chord_qual])
+	if len(notes)%len(CHORDS[chord_qual]) == 1 or randint(0, 1):
+		octave_offset = -1 * (len(notes) // len(CHORDS[chord_qual]))
 	else:
-		octave_offset = 0
-	return key + chord-1 + offset + octave_offset*OCTAVE_SIZE
+		octave_offset = len(notes) // len(CHORDS[chord_qual])
+
+	midi = key + chord-1 + offset + octave_offset*OCTAVE_SIZE
+
+	# Make sure the note is in range; if it's not, choose a random octave for it.
+	while (midi > MIDI_MAX) or (midi < MIDI_MIN):
+		if midi > MIDI_MAX:
+			midi -= randint(0, octave_offset - 1)
+		elif midi < MIDI_MIN:
+			midi += randint(0, -1*octave_offset - 1)
+
+	return midi
