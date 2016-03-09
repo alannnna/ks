@@ -15,6 +15,9 @@ from pygame.mixer import Sound, get_init, pre_init
 from frequencies import midi_to_hz
 
 
+N_OVERTONES = 15
+
+
 class Note(Sound):
 
     def __init__(self, midi, volume=.1):
@@ -24,15 +27,27 @@ class Note(Sound):
         self.set_volume(volume)
 
     def build_samples(self):
-        period = int(round(get_init()[0] / self.frequency))
-        samples = array("h", [0] * period)
-        amplitude = 2 ** (abs(get_init()[1]) - 1) - 1
-        for time in xrange(period):
-            if time < period / 2:
-                samples[time] = amplitude
-            else:
-                samples[time] = -amplitude
+        fundamental_period = int(round(get_init()[0] / self.frequency))
+        samples = array("h", [0] * fundamental_period)
+
+        for i in range(1, N_OVERTONES+1):
+            period = int(round(get_init()[0] / (i * self.frequency)))
+            amplitude = (2 ** (abs(get_init()[1]) - 1) - 1) / 4
+
+            # Make the overtones quieter
+            if i != 1:
+                if i % 2 == 0:
+                    amplitude /= i
+                else:
+                    amplitude /= i*4
+
+            for time in xrange(fundamental_period):
+                if time % period < period / 2:
+                    samples[time] += amplitude
+                else:
+                    samples[time] += -amplitude
         return samples
+
 
 if __name__ == "__main__":
     pre_init(44100, -16, 1, 1024)

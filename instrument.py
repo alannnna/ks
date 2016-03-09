@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 from __future__ import division
+from time import sleep
+import atexit
 # import RPi.GPIO as gpio
 import pygame
 from pygame.mixer import pre_init
-from time import sleep
 
 # from capsense import CapRead as cap_read
 from note import Note
@@ -39,13 +40,10 @@ class TouchInstrument(object):
 
         if len(self.notes) == self.max_notes:
             return
-        print self.notes
         notes = [note.midi for note in self.notes]
-        print notes
         next_note = get_next_note(notes, self.chord, key=self.key)
-        print next_note
         n = Note(next_note, volume=.05)
-        n.play(-1)
+        n.play(-1, fade_ms=500)
         self.notes.append(n)
 
     def remove_note(self):
@@ -73,7 +71,7 @@ class TouchInstrument(object):
 
         # rpi gpio setup
         gpio.setmode(gpio.BCM)
-        gpio.setwarnings(False)
+        gpio.setwarnings(False)  # TODO try without this line
         print "RPi GPIO initialized."
 
         # Sound setup (pygame)
@@ -83,9 +81,15 @@ class TouchInstrument(object):
         print "Sound initialized."
         print "TouchInstrument is ready."
 
-        while True:
-            level = self.get_sound_level()
-            self.set_sound(level)
+        try:
+            while True:
+                level = self.get_sound_level()
+                self.set_sound(level)
+        except KeyboardInterrupt:
+            print "Cleaning up."
+            gpio.cleanup()
+            pygame.quit()
+            return
 
     def test_run(self):
         print "Starting TouchInstrument test..."
@@ -96,14 +100,19 @@ class TouchInstrument(object):
         pygame.mixer.set_num_channels(self.max_notes)
         print "Sound initialized."
 
-        levels = [0, 1, 2, 3, 4, 5, 4, 2, 1, 0, 0, 3, 6, 5, 4, 3, 1, 0, 1, 1, 0]
+        levels = [0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 3, 4, 5, 4, 2, 1, 0, 0, 3, 6, 5, 4, 3, 1, 0, 2, 1, 0]
         counter = 0
-        while True:
-            self.set_sound(levels[counter])
-            counter += 1
-            if counter == len(levels):
-                counter = 0
-            sleep(0.5)
+        try:
+            while True:
+                self.set_sound(levels[counter])
+                counter += 1
+                if counter == len(levels):
+                    counter = 0
+                sleep(0.5)
+        except KeyboardInterrupt:
+            print "Cleaning up."
+            pygame.quit()
+            return
 
 
 if __name__ == "__main__":
