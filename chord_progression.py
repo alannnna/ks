@@ -4,6 +4,7 @@ http://www.electricchili.com/wp-content/uploads/2010/06/ScreenHunter_13-Jun.-20-
 
 TODO should probably write a class Chord
 '''
+from __future__ import division
 from random import choice, randint
 
 from note import Note
@@ -48,6 +49,12 @@ def get_next_note(notes, chord, key=69):
 
 	# Add the next chord value in the sequence
 	offset = CHORDS[chord_qual][len(notes)%len(CHORDS[chord_qual])]
-	# TODO decide where to add chord vals
-	# octave_offset = ??
-	return key + chord-1 + offset
+	# Set an octave offset
+	if len(notes) > len(CHORDS[chord_qual]):
+		if len(notes)%len(CHORDS[chord_qual]) == 1:
+			octave_offset = -1 * (len(notes) // len(CHORDS[chord_qual]))
+		else:
+			octave_offset = len(notes) // len(CHORDS[chord_qual])
+	else:
+		octave_offset = 0
+	return key + chord-1 + offset + octave_offset*OCTAVE_SIZE
