@@ -9,14 +9,17 @@
 
 from array import array
 from time import sleep
-
 import pygame
 from pygame.mixer import Sound, get_init, pre_init
 
+from frequencies import midi_to_hz
+
+
 class Note(Sound):
 
-    def __init__(self, frequency, volume=.1):
-        self.frequency = frequency
+    def __init__(self, midi, volume=.1):
+        self.midi = midi
+        self.frequency = midi_to_hz(midi)
         Sound.__init__(self, buffer=self.build_samples())
         self.set_volume(volume)
 
