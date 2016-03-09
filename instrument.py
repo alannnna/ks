@@ -12,28 +12,38 @@ from note import Note
 from chord_progression import get_next_chord, get_next_note
 
 
-SENSOR_PIN = 17
+SENSOR_PINS = [17, 21]
 OUT_PIN = 18
 
 
 class TouchInstrument(object):
     def __init__(self):
         self.smooth_factor = 500
+        self.calibrate_amount = 30
         self.max_notes = 16
         self.notes = []
         self.last_level = 0
         self.chord = 1
         self.key = 69  # Midi value for A4; key of A
+        self.calibration_factors = [0] * len(SENSOR_PINS)
 
-    def get_sound_level(self):
+    def get_sound_level(self, return_totals=False):
         '''
         Returns an integer value for sound level, to be translated to
         chord complexity or something.
         '''
-        total = 0
+        totals = [0]*len(SENSOR_PINS)
+        levels = [0]*len(SENSOR_PINS)
         for i in range(0, self.smooth_factor):
-            total += cap_read(sensor_pin=SENSOR_PIN, out_pin=OUT_PIN)
-        return max(total-5*self.smooth_factor, 0) // self.smooth_factor
+            for i, sensor_pin in enumerate(SENSOR_PINS):
+                totals[i] += cap_read(sensor_pin=sensor_pin, out_pin=OUT_PIN)
+
+        if return_totals:
+            return totals
+
+        for i in range(len(SENSOR_PINS)):
+            levels[i] = max(totals[i] - self.calibration_factors[i] * self.smooth_factor, 0) // self.smooth_factor
+        return sum(levels)
 
     def add_note(self):
         print "adding note"
@@ -79,13 +89,27 @@ class TouchInstrument(object):
         pygame.init()
         pygame.mixer.set_num_channels(self.max_notes)
         print "Sound initialized."
+
+        # Calibrate; find what should be sound level zero and give a self.smooth_factor/2 buffer
+        print "Calibrating..."
+        totals = [0] * len(SENSOR_PINS)
+        # Get the average of several reads
+        for i in range(self.calibrate_amount):
+            new_totals = self.get_sound_level(return_totals=True)
+            for i in range(len(totals)):
+                totals[i] += new_totals[i]
+        totals = [total / self.calibrate_amount for total in totals]
+        # Set calibration factors based on smooth factor
+        for i, total in enumerate(totals):
+            self.calibration_factors[i] = int((total + self.smooth_factor / 2) // self.smooth_factor)
+        print self.calibration_factors
+        print "Calibrated."
+
         print "TouchInstrument is ready."
 
         try:
             while True:
                 level = self.get_sound_level()
-                sleep(0.05)
-                print "." * level
                 self.set_sound(level)
         except KeyboardInterrupt:
             print "Cleaning up."
